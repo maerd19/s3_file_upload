@@ -3,6 +3,12 @@ import './FileUpload.css';
 
 // Component for drag-and-drop file uploading
 const FileUpload = ({ onFileUpload }) => {
+  // Allowed file extensions for upload
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+  // Allowed MIME types for upload
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
   // Callback triggered when files are dropped or selected
   const handleDrop = useCallback((event) => {
     event.preventDefault();
@@ -13,6 +19,19 @@ const FileUpload = ({ onFileUpload }) => {
     // Check if the file size is valid
     if (files[0].size > 1024000) {
       alert('You cannot upload files larger than 1MB.');
+      return;
+    }
+
+    // Validate file extension
+    const fileExtension = files[0].name.split('.').pop().toLowerCase();
+    if (!allowedExtensions.includes(fileExtension)) {
+      alert('Invalid file extension.');
+      return;
+    }
+
+    // Validate MIME type
+    if (!allowedMimeTypes.includes(files[0].type)) {
+      alert('Invalid file type.');
       return;
     }
 
