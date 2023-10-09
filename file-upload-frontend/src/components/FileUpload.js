@@ -1,14 +1,14 @@
 import React, { useCallback, useState } from "react";
 import { Button, Typography, Box, List, ListItem } from "@mui/material";
+import {
+  isValidFileSize,
+  isValidFileExtension,
+  isValidMimeType,
+} from "../utils/fileValidations";
+import { boxStyles } from "../styles/FileUploadStyles";
 
 // Component for drag-and-drop file uploading
 const FileUpload = ({ onFileUpload }) => {
-  // Allowed file extensions for upload
-  const allowedExtensions = ["jpg", "jpeg", "png", "gif"];
-
-  // Allowed MIME types for upload
-  const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
-
   // State variable to keep track of uploaded files
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
@@ -23,21 +23,17 @@ const FileUpload = ({ onFileUpload }) => {
         : event.target.files;
 
       // Check if the file size is valid
-      if (files[0].size > 1024000) {
+      if (!isValidFileSize(files[0].size)) {
         alert("You cannot upload files larger than 1MB.");
         return;
       }
 
-      // Validate file extension
-      const fileExtension = files[0].name.split(".").pop().toLowerCase();
-      if (!allowedExtensions.includes(fileExtension)) {
-        alert("Invalid file extension.");
-        return;
-      }
-
-      // Validate MIME type
-      if (!allowedMimeTypes.includes(files[0].type)) {
-        alert("Invalid file type.");
+      // Validate file extension & MIME type
+      if (
+        !isValidFileExtension(files[0].name) ||
+        !isValidMimeType(files[0].type)
+      ) {
+        alert("Invalid file type or extension.");
         return;
       }
 
@@ -57,17 +53,7 @@ const FileUpload = ({ onFileUpload }) => {
 
   return (
     <Box
-      sx={{
-        width: 300,
-        height: 150,
-        border: "2px dashed #666",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 2,
-        gap: 2,
-      }}
+      sx={boxStyles}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
@@ -81,10 +67,10 @@ const FileUpload = ({ onFileUpload }) => {
       </Button>
       {uploadedFiles.length > 0 && (
         <List>
-        {uploadedFiles.map((file, index) => (
-          <ListItem key={index}>{file.name}</ListItem>
-        ))}
-      </List>
+          {uploadedFiles.map((file, index) => (
+            <ListItem key={index}>{file.name}</ListItem>
+          ))}
+        </List>
       )}
     </Box>
   );
