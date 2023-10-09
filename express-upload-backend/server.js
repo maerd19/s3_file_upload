@@ -36,6 +36,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
     const file = req.file;
 
     // Set up the payload to send the file to S3
+    console.log('process.env.S3_BUCKET_NAME:', process.env.S3_BUCKET_NAME)
     const uploadParams = {
         Bucket: process.env.S3_BUCKET_NAME,
         Key: file.originalname, // Filename to save as on S3
