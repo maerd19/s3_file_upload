@@ -1,12 +1,26 @@
 import React from 'react';
 import './App.css';
 import FileUpload from './components/FileUpload';
+import axios from 'axios';
 
 function App() {
   const handleFileUpload = (file) => {
     console.log("File to upload:", file);
 
-    // TODO: Handle the file and upload it to the BE which then uploads it to S3
+    // Form data to hold the file
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Send the file to the BE
+    axios.post('http://localhost:3001/upload', formData)
+      .then(response => {
+        console.log("File uploaded successfully:", response.data);
+        // You might want to display the success status or S3 URL to the user
+      })
+      .catch(error => {
+        console.error("There was an error uploading the file:", error);
+        // Handle the error appropriately. E.g., display an error message to the user.
+      });
   };
 
   return (
