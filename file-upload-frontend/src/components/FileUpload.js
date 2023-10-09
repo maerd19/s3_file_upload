@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Button, Typography, Box, List, ListItem } from "@mui/material";
+import { Button, Typography, Box } from "@mui/material";
 import CustomAlert from "./CustomAlert";
 import {
   isValidFileSize,
@@ -9,9 +9,8 @@ import {
 import { boxStyles } from "../styles/FileUploadStyles";
 
 // Component for drag-and-drop file uploading
-const FileUpload = ({ onFileUpload }) => {
+const FileUpload = ({ onFileUploaded }) => {
   // State variable to keep track of uploaded files
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [alertInfo, setAlertInfo] = useState({
     open: false,
@@ -44,7 +43,6 @@ const FileUpload = ({ onFileUpload }) => {
     }
 
     setSelectedFile(files[0]);
-    setUploadedFiles((prevFiles) => [...prevFiles, files[0]]);
   }, []);
 
   const handleUpload = useCallback(() => {
@@ -53,13 +51,11 @@ const FileUpload = ({ onFileUpload }) => {
       return;
     }
 
-    onFileUpload(selectedFile);
+    onFileUploaded(selectedFile);
     setSelectedFile(null);
-    setUploadedFiles([]); // Clear the uploadedFiles list
-
     // Display a success alert
     showAlert("File uploaded successfully!", "success");
-  }, [onFileUpload, selectedFile]);
+  }, [onFileUploaded, selectedFile]);
 
   // Prevent default behavior of drag events to make the drop event work
   const handleDragOver = (event) => {
@@ -94,13 +90,7 @@ const FileUpload = ({ onFileUpload }) => {
           Upload
         </Button>
       )}
-      {uploadedFiles.length > 0 && (
-        <List>
-          {uploadedFiles.map((file, index) => (
-            <ListItem key={index}>{file.name}</ListItem>
-          ))}
-        </List>
-      )}
+    
       <CustomAlert
         open={alertInfo.open}
         handleClose={handleCloseAlert}

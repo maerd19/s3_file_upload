@@ -1,5 +1,5 @@
 import React from 'react';
-import FileUpload from './components/FileUpload';
+import UploadContainer from './container/UploadContainer';
 import { uploadFile } from './services/api';
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Upload your file</h1>
-        <FileUpload onFileUpload={handleFileUpload} />
+        <UploadContainer onFileUploaded={handleFileUpload} />
       </header>
     </div>
   );
