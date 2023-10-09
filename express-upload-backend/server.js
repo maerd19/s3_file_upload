@@ -17,6 +17,14 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
+// A helper function to send structured error responses
+const sendErrorResponse = (res, message, statusCode = 500) => {
+    res.status(statusCode).json({
+        status: 'error',
+        message: message
+    });
+}
+
 app.use(cors()); // Enable CORS for all routes
 app.use(bodyParser.json());
 
@@ -25,32 +33,49 @@ const upload = multer({
     storage: storage,
     limits: {
         fileSize: 1024 * 1024 // Limit file size to 1MB
-    },
-    fileFilter: function (req, file, callback) {
-        // Add server-side file type validation here, similar to the frontend
-        callback(null, true);
     }
+    // Add additional server-side file type validation if required
+}).single('file'); // Moved the multer middleware out for improved error handling
+
+app.post('/upload', (req, res, next) => {
+    upload(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return sendErrorResponse(res, 'File size exceeds the allowable limit.', 400);
+            }
+            return sendErrorResponse(res, 'File upload failed.', 400);
+        } else if (err) {
+            return sendErrorResponse(res, 'File upload failed.', 400);
+        }
+        
+        const file = req.file;
+        if (!file) {
+            return sendErrorResponse(res, 'No file provided.', 400);
+        }
+
+        // Set up the payload to send the file to S3
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: file.originalname,
+            Body: file.buffer,
+            ContentType: file.mimetype
+        };
+
+        s3.upload(uploadParams, function(s3Err, data) {
+            if (s3Err) {
+                console.error('S3 Error:', s3Err);  // Log the detailed error on the server
+                return sendErrorResponse(res, 'Failed to store the file.');
+            } else {
+                res.json({ status: "success", url: data.Location });
+            }
+        });
+    });
 });
 
-app.post('/upload', upload.single('file'), (req, res) => {
-    const file = req.file;
-
-    // Set up the payload to send the file to S3
-    console.log('process.env.S3_BUCKET_NAME:', process.env.S3_BUCKET_NAME)
-    const uploadParams = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: file.originalname, // Filename to save as on S3
-        Body: file.buffer,
-        ContentType: file.mimetype
-    };
-
-    s3.upload(uploadParams, function(err, data) {
-        if (err) {
-            res.status(500).send(err);
-        } else {
-            res.json({ status: "Success", url: data.Location });
-        }
-    });
+// Generic error handler for any other errors (e.g., database errors)
+app.use((err, req, res, next) => {
+    console.error('Internal Error:', err);
+    sendErrorResponse(res, 'Internal server error.');
 });
 
 app.listen(port, () => {
